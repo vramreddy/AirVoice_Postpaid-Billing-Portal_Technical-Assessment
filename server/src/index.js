@@ -76,12 +76,20 @@ const pool = {
  }
 };
 
-const smtp = nodemailer.createTransport({host:process.env.SMTP_HOST||'localhost',port:Number(process.env.SMTP_PORT||1025),secure:false});
+const smtp = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'localhost',
+  port: Number(process.env.SMTP_PORT || 1025),
+  secure: false,
+  connectionTimeout: 1500,
+  greetingTimeout: 1000,
+  socketTimeout: 1500
+});
 const app = express();
-app.use(helmet());
-app.use(cors({origin:process.env.CLIENT_ORIGIN||'http://localhost:5173', exposedHeaders:['Content-Disposition']}));
+app.set('trust proxy', 1);
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(cors({ origin: true, credentials: true, exposedHeaders: ['Content-Disposition'] }));
 app.use(express.json({limit:'20kb'}));
-const authLimit = rateLimit({windowMs:15*60*1000,limit:12,standardHeaders:'draft-7',legacyHeaders:false});
+const authLimit = rateLimit({windowMs:15*60*1000,limit:50,standardHeaders:'draft-7',legacyHeaders:false});
 const wrap = fn => (req,res,next)=>Promise.resolve(fn(req,res,next)).catch(next);
 const money = n => Number(Number(n).toFixed(2));
 const safeSubscriber = s => ({id:s.id,accountNumber:s.account_number,name:s.full_name,mobile:s.mobile,email:s.email,plan:s.plan_name});
@@ -112,11 +120,14 @@ app.post('/api/auth/request-otp',authLimit,wrap(async(req,res)=>{
  if(prev.rows[0] && Date.now()-new Date(prev.rows[0].requested_at).getTime()<30_000)return res.status(429).json({message:'Please wait 30 seconds before requesting another OTP.'});
  const otp=String(crypto.randomInt(100000,1000000));
  const hash=await bcrypt.hash(otp,10);
-  try {
-   await smtp.sendMail({from:process.env.MAIL_FROM||'AirVoice Demo <demo@airvoice.test>',to:subscriber.email,subject:'Your AirVoice sign-in code',text:`Your AirVoice verification code is ${otp}. It expires in 5 minutes. This is a demonstration email.`});
-  } catch (smtpErr) {
-   console.log(`[AirVoice SMTP Warning] ${smtpErr.message}`);
-  }
+  smtp.sendMail({
+    from: process.env.MAIL_FROM || 'AirVoice Demo <demo@airvoice.test>',
+    to: subscriber.email,
+    subject: 'Your AirVoice sign-in code',
+    text: `Your AirVoice verification code is ${otp}. It expires in 5 minutes. This is a demonstration email.`
+  }).catch(smtpErr => {
+    console.log(`[AirVoice SMTP Warning] ${smtpErr.message}`);
+  });
   console.log(`\n>>> [AirVoice Login OTP] Code for ${mobile} (${subscriber.email}): ${otp} <<<\n`);
   await pool.query(`INSERT INTO otp_challenges(subscriber_id,otp_hash,expires_at,requested_at,attempts)
   VALUES ($1,$2,now()+interval '5 minutes',now(),0)
@@ -186,16 +197,12 @@ app.post('/api/subscribe',wrap(async(req,res)=>{
 
  const token=jwt.sign({sub:subscriber.id},process.env.JWT_SECRET,{expiresIn:'8h',algorithm:'HS256'});
 
- try{
-  await smtp.sendMail({
-   from:process.env.MAIL_FROM||'AirVoice <welcome@airvoice.test>',
-   to:email,
-   subject:'Welcome to AirVoice! Your subscription is active',
-   text:`Welcome to AirVoice, ${fullName}!\n\nYour postpaid subscription (${planName}) is now ACTIVE.\nAccount Number: ${accountNum}\nRegistered Mobile: ${mobile}\nPayment Received: ₹${amount.toFixed(2)} (${paymentMethod})\n\nYou can now log in and manage your account anytime at http://localhost:5173.`
-  });
- }catch(e){
-  console.log('[AirVoice Welcome Mail Warning]',e.message);
- }
+ smtp.sendMail({
+  from:process.env.MAIL_FROM||'AirVoice <welcome@airvoice.test>',
+  to:email,
+  subject:'Welcome to AirVoice! Your subscription is active',
+  text:`Welcome to AirVoice, ${fullName}!\n\nYour postpaid subscription (${planName}) is now ACTIVE.\nAccount Number: ${accountNum}\nRegistered Mobile: ${mobile}\nPayment Received: ₹${amount.toFixed(2)} (${paymentMethod})\n\nYou can now log in and manage your account anytime at http://localhost:5173.`
+ }).catch(e => console.log('[AirVoice Welcome Mail Warning]', e.message));
 
  res.status(201).json({
   message:'Subscription successful! Welcome to AirVoice.',
