@@ -1,1 +1,27 @@
-{"name":"airvoice-portal","private":true,"version":"1.1.0","scripts":{"dev":"concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"","build":"npm --prefix client run build","start":"npm --prefix server start"},"devDependencies":{"concurrently":"^9.1.0"}}
+{
+  "name": "airvoice-portal",
+  "private": true,
+  "version": "1.1.0",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.0",
+    "pdfkit": "^0.16.0",
+    "pg": "^8.13.3",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

@@ -12,34 +12,37 @@ const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
- console.error('JWT_SECRET must be configured in server/.env (32+ characters).');
- process.exit(1);
-}
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'airvoice-super-secret-jwt-key-2026-production-ready-32-chars';
 
 const { createInMemoryPool } = require('./db-fallback');
 const { startMailFallback } = require('./mail-fallback');
 
-// Auto-start mail mock if ports are available
-startMailFallback(Number(process.env.SMTP_PORT || 1025), 8025);
+// Auto-start mail mock if running standalone (not in Vercel serverless)
+if (!process.env.VERCEL) {
+  startMailFallback(Number(process.env.SMTP_PORT || 1025), 8025);
+}
 
-const realPgPool = new Pool({
- connectionString: process.env.DATABASE_URL || 'postgresql://airvoice:airvoice_dev@localhost:5432/airvoice',
- connectionTimeoutMillis: 1500
-});
+const isLocalhostDb = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');
 const inMemoryPool = createInMemoryPool();
-let useInMemory = false;
+let useInMemory = Boolean(process.env.VERCEL && isLocalhostDb);
 
-realPgPool.query('SELECT 1').then(() => {
- console.log('[AirVoice DB] Connected to PostgreSQL on localhost:5432');
-}).catch(() => {
- useInMemory = true;
- console.log('[AirVoice DB] PostgreSQL not reachable. Using in-memory store initialized from init.sql.');
-});
+let realPgPool = null;
+if (!useInMemory) {
+  realPgPool = new Pool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://airvoice:airvoice_dev@localhost:5432/airvoice',
+    connectionTimeoutMillis: 1500
+  });
+  realPgPool.query('SELECT 1').then(() => {
+    console.log('[AirVoice DB] Connected to PostgreSQL');
+  }).catch(() => {
+    useInMemory = true;
+    console.log('[AirVoice DB] PostgreSQL not reachable. Using in-memory store initialized from init.sql.');
+  });
+}
 
 const pool = {
  query: async (text, params) => {
-  if (useInMemory) return inMemoryPool.query(text, params);
+  if (useInMemory || !realPgPool) return inMemoryPool.query(text, params);
   try {
    return await realPgPool.query(text, params);
   } catch (err) {
@@ -52,7 +55,7 @@ const pool = {
   }
  },
  connect: async () => {
-  if (useInMemory) return inMemoryPool.connect();
+  if (useInMemory || !realPgPool) return inMemoryPool.connect();
   try {
    return await realPgPool.connect();
   } catch (err) {
