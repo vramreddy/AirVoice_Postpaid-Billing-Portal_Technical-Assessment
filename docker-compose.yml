@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airvoice
+      POSTGRES_PASSWORD: airvoice_dev
+      POSTGRES_DB: airvoice
+    ports:
+      - "5432:5432"
+    volumes:
+      - airvoice_pg_data:/var/lib/postgresql/data
+      - ./server/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+volumes:
+  airvoice_pg_data:
