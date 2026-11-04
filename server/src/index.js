@@ -17,9 +17,16 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'airvoice-super-secret-jwt-ke
 const { createInMemoryPool } = require('./db-fallback');
 const { startMailFallback } = require('./mail-fallback');
 
-// Auto-start mail mock if running standalone (not in Vercel serverless)
-if (!process.env.VERCEL) {
-  startMailFallback(Number(process.env.SMTP_PORT || 1025), 8025);
+// Run the local mail mock only during development.
+// Production uses a separately configured email service.
+if (
+  process.env.NODE_ENV !== 'production' &&
+  !process.env.VERCEL
+) {
+  startMailFallback(
+    Number(process.env.SMTP_PORT || 1025),
+    8025
+  );
 }
 
 const isLocalhostDb = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');
