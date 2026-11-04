@@ -45,7 +45,10 @@ export function Login() {
       if (e.response?.data?.notSubscribed || e.response?.status === 404) {
         setNotSubscribed(true);
       } else {
-        setError(msg(e));
+        const errorMsg = e.code === 'ECONNABORTED' || e.message?.includes('timeout') || e.message?.includes('Network Error')
+          ? 'Cloud server is waking up. Please click again in a few seconds.'
+          : msg(e);
+        setError(errorMsg);
       }
     } finally {
       setBusy(false);

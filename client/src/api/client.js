@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
+const isProduction =
+  typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1';
+
+const defaultBase = isProduction
+  ? 'https://airvoice-postpaid-backend.onrender.com/api'
+  : '/api';
+
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || defaultBase });
 
 api.interceptors.request.use(config => {
   const token = sessionStorage.getItem('airvoice-token');
