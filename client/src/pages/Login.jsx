@@ -99,6 +99,9 @@ export function Login() {
 
       <div className="auth-right">
         <div className="auth-card">
+          <div className="mobile-auth-brand">
+            <Brand />
+          </div>
           <span className="auth-step">
             SUBSCRIBER ACCESS <span className="step-line" /> 0{step} / 02
           </span>

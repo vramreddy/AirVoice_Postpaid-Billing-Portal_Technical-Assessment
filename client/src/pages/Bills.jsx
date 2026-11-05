@@ -23,17 +23,15 @@ export function Bills() {
             <h3>All Billing Records</h3>
             <p>Select any invoice to inspect line-by-line itemized charges or download PDF statements.</p>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="table-filter-bar">
             <input
-              className="form-input"
-              style={{ width: 200, padding: '8px 12px', fontSize: 13 }}
+              className="form-input filter-search-input"
               placeholder="Search month or invoice…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
             <select
-              className="form-input"
-              style={{ width: 140, padding: '8px 12px', fontSize: 13 }}
+              className="form-input filter-select"
               value={filter}
               onChange={e => setFilter(e.target.value)}
             >

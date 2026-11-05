@@ -84,15 +84,15 @@ export function Shell({ children, title, subtitle }) {
       <div className="workspace">
         <header className="topbar">
           <div className="topbar-left">
-            <button className="menu-button" onClick={() => setMobileMenu(true)}>
+            <button className="menu-button" onClick={() => setMobileMenu(true)} aria-label="Open navigation menu">
               <Menu size={22} />
             </button>
-            <span>AirVoice Portal</span>
-            <ChevronRight size={14} />
-            <b>{title}</b>
+            <span className="topbar-crumb-root">AirVoice Portal</span>
+            <ChevronRight className="topbar-crumb-sep" size={14} />
+            <b className="topbar-title">{title}</b>
           </div>
           <div className="topbar-right">
-            <span className="badge-pill status-live">
+            <span className="badge-pill status-live topbar-status">
               <span className="status-dot" /> ACTIVE POSTPAID
             </span>
             <div className="top-avatar">{user?.name?.slice(0, 1) || 'R'}</div>

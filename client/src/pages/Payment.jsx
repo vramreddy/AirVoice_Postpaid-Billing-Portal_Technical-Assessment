@@ -54,17 +54,15 @@ export function Payment() {
             Transaction Reference
             <b>{complete.reference}</b>
           </div>
-          <div style={{ display: 'flex', gap: 12, marginTop: 20, width: '100%', maxWidth: 420 }}>
+          <div className="payment-success-actions">
             <button
-              className="button secondary large"
-              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              className="button secondary large success-btn"
               onClick={() => downloadBill(id, 'pdf')}
             >
               <ArrowDownToLine size={18} /> Download PDF
             </button>
             <Link
-              className="button primary large"
-              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              className="button primary large success-btn"
               to={'/bills/' + id}
             >
               View Statement <ArrowRight size={18} />
