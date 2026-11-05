@@ -40,7 +40,7 @@ export function Landing() {
               Experience seamless Voice, High Speed Internet, and DTH management. Review itemized statements, track instant payments, and enjoy transparent billing without surprises.
             </p>
             <div className="hero-buttons">
-              <Link to="/subscribe" className="button primary large">
+              <Link to="/subscribe" className="button primary large subscribe-btn">
                 Subscribe for ₹999/mo <ArrowRight size={18} />
               </Link>
               <Link to="/login" className="button secondary large">
